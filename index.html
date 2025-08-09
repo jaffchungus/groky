@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Albert Newton AI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
+  body {
+    margin: 0;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    font-family: 'Roboto Mono', monospace;
+    color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  #app {
+    background: #121212cc;
+    width: 400px;
+    max-width: 90vw;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #0f4c81;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    background: #0f4c81;
+    padding: 20px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    user-select: none;
+  }
+
+  #chat {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .message {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 20px;
+    line-height: 1.4;
+    font-size: 0.95rem;
+  }
+
+  .user {
+    align-self: flex-end;
+    background: #0f4c81;
+    color: #e0e0e0;
+    border-bottom-right-radius: 4px;
+  }
+
+  .albert {
+    align-self: flex-start;
+    background: #2a5298;
+    color: #cce7ff;
+    border-bottom-left-radius: 4px;
+  }
+
+  footer {
+    display: flex;
+    padding: 15px 20px;
+    background: #0f4c81;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 15px;
+    font-size: 1rem;
+    outline: none;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  button {
+    margin-left: 10px;
+    background: #2a5298;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    color: #cce7ff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  button:hover {
+    background: #1e3c72;
+  }
+
+  /* Scrollbar */
+  #chat::-webkit-scrollbar {
+    width: 8px;
+  }
+  #chat::-webkit-scrollbar-thumb {
+    background: #0f4c81;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <header>Albert Newton AI</header>
+    <div id="chat"></div>
+    <footer>
+      <input type="text" id="userInput" placeholder="Ask me anything or search..." autocomplete="off" />
+      <button id="sendBtn">Send</button>
+      <button id="searchBtn" title="Search the web">🔍</button>
+    </footer>
+  </div>
+
+<script>
+  const chat = document.getElementById('chat');
+  const userInput = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const searchBtn = document.getElementById('searchBtn');
+
+  // Simple AI response simulation
+  function albertResponse(input) {
+    input = input.toLowerCase().trim();
+
+    // Basic knowledge simulation
+    if (input.includes('who are you')) {
+      return "I am Albert Newton AI, your friendly assistant inspired by the great minds of science.";
+    }
+    if (input.includes('newton')) {
+      return "Isaac Newton was a physicist and mathematician who formulated the laws of motion and universal gravitation.";
+    }
+    if (input.includes('albert')) {
+      return "Albert Einstein revolutionized physics with his theory of relativity.";
+    }
+    if (input.includes('hello') || input.includes('hi')) {
+      return "Hello! How can I assist you today?";
+    }
+    if (input.includes('help')) {
+      return "You can ask me questions or use the search button to look things up on the web.";
+    }
+    if (input.length === 0) {
+      return "Please type something so I can assist you.";
+    }
+
+    // Default fallback
+    return "That's interesting! Unfortunately, I don't have an answer for that yet. Try searching the web!";
+  }
+
+  // Add message to chat
+  function addMessage(text, sender) {
+    const msg = document.createElement('div');
+    msg.classList.add('message', sender);
+    msg.textContent = text;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  // Handle user input
+  function handleInput() {
+    const input = userInput.value.trim();
+    if (!input) return;
+
+    addMessage(input, 'user');
+    userInput.value = '';
+
+    // Simulate AI thinking delay
+    setTimeout(() => {
+      const response = albertResponse(input);
+      addMessage(response, 'albert');
+    }, 600);
+  }
+
+  // Search the web using DuckDuckGo
+  function searchWeb() {
+    const query = userInput.value.trim();
+    if (!query) return;
+    const url = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+    window.open(url, '_blank');
+  }
+
+  sendBtn.addEventListener('click', handleInput);
+  userInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      handleInput();
+    }
+  });
+  searchBtn.addEventListener('click', searchWeb);
+
+  // Initial greeting
+  addMessage("Hello! I'm Albert Newton AI. Ask me anything or use the search button 🔍.", 'albert');
+</script>
+</body>
+</html>
