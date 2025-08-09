@@ -1,205 +1,631 @@
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Albert Newton AI</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
-
-  body {
-    margin: 0;
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    font-family: 'Roboto Mono', monospace;
-    color: #e0e0e0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+  <meta charset="utf-8" />
+  <title>Albert Newton AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <link rel="preconnect" href="https://esm.run">
+  <style>
+    :root{
+      --bg: #0b0f18;
+      --panel: rgba(255,255,255,0.06);
+      --panel-2: rgba(255,255,255,0.1);
+      --text: #e8ecf1;
+      --muted: #a9b3c7;
+      --brand: #6ad8ff;
+      --accent: #9b7dff;
+      --ok: #5be49b;
+      --warn: #ffc971;
+      --err: #ff6b6b;
+      --bubble-user: #1f2a44;
+      --bubble-ai: #172238;
+      --code-bg: #0e1422;
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 10px 40px rgba(0,0,0,0.35);
+      --radius: 14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(155,125,255,0.25), transparent 60%),
+        radial-gradient(1000px 600px at 90% 10%, rgba(106,216,255,0.2), transparent 60%),
+        linear-gradient(180deg, #070b13, #0b0f18 35%, #0b0f18);
+      font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    .app{
+      display:flex;
+      flex-direction:column;
+      height:100dvh;
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px;
+      gap:12px;
+    }
+    header{
+      display:flex;align-items:center;gap:14px;justify-content:space-between;
+      background:var(--panel);border:1px solid var(--border);
+      padding:12px 14px;border-radius:var(--radius);box-shadow:var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+      background:linear-gradient(135deg, var(--accent), var(--brand));
+      color:#06101a;font-weight:800;letter-spacing:0.5px;
+      box-shadow: 0 6px 20px rgba(155,125,255,0.35);
+    }
+    .title{display:flex;flex-direction:column}
+    .title h1{font-size:16px;margin:0 0 2px 0;letter-spacing:0.3px}
+    .title .sub{font-size:12px;color:var(--muted)}
+    .controls{
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end
+    }
+    select, button, input[type="text"]{
+      background:var(--panel-2);color:var(--text);
+      border:1px solid var(--border);border-radius:10px;
+      padding:8px 10px;font:inherit;outline:none;
+    }
+    button{
+      cursor:pointer;border-color:transparent;
+      background:linear-gradient(135deg, rgba(106,216,255,0.2), rgba(155,125,255,0.2));
+    }
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .toggle{
+      display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;
+      background:var(--panel-2);border:1px solid var(--border);user-select:none
+    }
+    .toggle input{appearance:none;width:34px;height:20px;border-radius:999px;background:#24314f;position:relative;outline:none}
+    .toggle input:checked{background:#2b8c59}
+    .toggle input::after{
+      content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+      background:#eaf3ff;transition:all .18s ease
+    }
+    .toggle input:checked::after{left:16px}
+    main{
+      display:grid;grid-template-rows:1fr auto;gap:12px;min-height:0
+    }
+    .workspace{
+      display:grid;grid-template-columns: 1.1fr 0.9fr;gap:12px;min-height:0
+    }
+    .panel{
+      background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+      box-shadow:var(--shadow);min-height:0;display:flex;flex-direction:column;
+      overflow:hidden
+    }
+    .panel h2{
+      font-size:13px;margin:0;padding:10px 12px;color:var(--muted);
+      border-bottom:1px solid var(--border);background:rgba(255,255,255,0.04)
+    }
+    .chat{
+      padding:14px;overflow:auto;scroll-behavior:smooth;flex:1
+    }
+    .msg{display:flex;gap:10px;margin:10px 0;align-items:flex-start}
+    .msg .avatar{
+      width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:12px;
+      background:#203055;color:#bfe6ff;flex:0 0 28px
+    }
+    .msg.user .avatar{background:#334169;color:#d4e0ff}
+    .bubble{
+      padding:12px 12px;border-radius:12px;max-width:80%;
+      border:1px solid var(--border)
+    }
+    .msg.user .bubble{background:var(--bubble-user)}
+    .msg.ai .bubble{background:var(--bubble-ai)}
+    .bubble p{margin:0 0 10px 0;white-space:pre-wrap;word-break:break-word}
+    .bubble p:last-child{margin:0}
+    .bubble code{background:var(--code-bg);padding:2px 6px;border-radius:6px;border:1px solid var(--border)}
+    pre{
+      background:var(--code-bg);padding:10px;border-radius:10px;overflow:auto;border:1px solid var(--border)
+    }
+    .citations{margin-top:8px;font-size:12px;color:var(--muted)}
+    .search-panel{display:flex;flex-direction:column}
+    .search-body{padding:10px;overflow:auto;gap:10px;display:flex;flex-direction:column}
+    .result{
+      border:1px solid var(--border);border-radius:12px;padding:10px;background:rgba(255,255,255,0.03)
+    }
+    .result h3{margin:0 0 6px 0;font-size:14px}
+    .result a{color:var(--brand);text-decoration:none}
+    .result .src{color:var(--muted);font-size:12px}
+    .composer{
+      display:flex;gap:10px;align-items:flex-end;background:var(--panel);
+      border:1px solid var(--border);padding:10px;border-radius:var(--radius)
+    }
+    textarea{
+      flex:1;min-height:52px;max-height:160px;resize:vertical;background:transparent;color:var(--text);
+      border:none;outline:none;font:inherit;padding:8px
+    }
+    .help{
+      font-size:12px;color:var(--muted);margin-left:10px
+    }
+    .progress{
+      height:6px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;margin:8px 12px 0 12px
+    }
+    .bar{
+      height:100%;width:0%;background:linear-gradient(90deg, var(--brand), var(--accent));transition:width .15s ease
+    }
+    .statusline{padding:6px 12px 10px 12px;color:var(--muted);font-size:12px}
+    .hint{color:var(--muted);font-size:12px}
+    .pill{
+      display:inline-flex;gap:6px;align-items:center;padding:2px 8px;border-radius:999px;
+      border:1px solid var(--border);background:rgba(255,255,255,0.05);font-size:12px;color:var(--muted)
+    }
+    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .spacer{flex:1}
+    .danger{background:rgba(255,107,107,0.15)}
+    .link{color:var(--brand);text-decoration:none}
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+    @media (max-width: 980px){
+      .workspace{grid-template-columns: 1fr}
+      .result{font-size:14px}
+      .bubble{max-width:100%}
+    }
+  </style>
+  <!-- Import map for WebLLM -->
+  <script type="importmap">
+  {
+    "imports": {
+      "@mlc-ai/web-llm": "https://esm.run/@mlc-ai/web-llm"
+    }
   }
-
-  #app {
-    background: #121212cc;
-    width: 400px;
-    max-width: 90vw;
-    border-radius: 12px;
-    box-shadow: 0 0 20px #0f4c81;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  header {
-    background: #0f4c81;
-    padding: 20px;
-    text-align: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    user-select: none;
-  }
-
-  #chat {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .message {
-    max-width: 80%;
-    padding: 12px 16px;
-    border-radius: 20px;
-    line-height: 1.4;
-    font-size: 0.95rem;
-  }
-
-  .user {
-    align-self: flex-end;
-    background: #0f4c81;
-    color: #e0e0e0;
-    border-bottom-right-radius: 4px;
-  }
-
-  .albert {
-    align-self: flex-start;
-    background: #2a5298;
-    color: #cce7ff;
-    border-bottom-left-radius: 4px;
-  }
-
-  footer {
-    display: flex;
-    padding: 15px 20px;
-    background: #0f4c81;
-  }
-
-  input[type="text"] {
-    flex: 1;
-    border: none;
-    border-radius: 20px;
-    padding: 10px 15px;
-    font-size: 1rem;
-    outline: none;
-    font-family: 'Roboto Mono', monospace;
-  }
-
-  button {
-    margin-left: 10px;
-    background: #2a5298;
-    border: none;
-    border-radius: 20px;
-    padding: 10px 20px;
-    color: #cce7ff;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    font-family: 'Roboto Mono', monospace;
-  }
-
-  button:hover {
-    background: #1e3c72;
-  }
-
-  /* Scrollbar */
-  #chat::-webkit-scrollbar {
-    width: 8px;
-  }
-  #chat::-webkit-scrollbar-thumb {
-    background: #0f4c81;
-    border-radius: 4px;
-  }
-</style>
+  </script>
 </head>
 <body>
-  <div id="app">
-    <header>Albert Newton AI</header>
-    <div id="chat"></div>
-    <footer>
-      <input type="text" id="userInput" placeholder="Ask me anything or search..." autocomplete="off" />
-      <button id="sendBtn">Send</button>
-      <button id="searchBtn" title="Search the web">🔍</button>
-    </footer>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">AN</div>
+        <div class="title">
+          <h1>Albert Newton AI</h1>
+          <div class="sub">Local LLM + Web Search, zero server</div>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="pill" title="Your browser GPU capability">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.5"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.5"/></svg>
+          <span id="gpu-state">Checking GPU…</span>
+        </span>
+        <select id="model">
+          <option value="Phi-3-mini-4k-instruct-q4f16_1">Phi-3-mini 4k (fast, small)</option>
+          <option value="Qwen2-1.5B-Instruct-q4f16_1">Qwen2 1.5B (small)</option>
+          <option value="Llama-3.1-8B-Instruct-q4f16_1">Llama 3.1 8B (slower, better)</option>
+        </select>
+        <div class="toggle" title="When enabled, your question will run a quick web search to gather context.">
+          <input id="autoSearch" type="checkbox" checked />
+          <label for="autoSearch">Auto-search</label>
+        </div>
+        <button id="clear">Clear</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="workspace">
+        <div class="panel">
+          <h2>Chat</h2>
+          <div class="progress" hidden><div class="bar" id="progressBar"></div></div>
+          <div class="statusline" id="status">Loading model…</div>
+          <div class="chat" id="chat"></div>
+        </div>
+        <div class="panel search-panel">
+          <h2>Search</h2>
+          <div class="search-body" id="search"></div>
+        </div>
+      </div>
+
+      <div class="composer">
+        <textarea id="input" placeholder="Ask Albert Newton AI anything… (Shift+Enter for new line)"></textarea>
+        <div class="row">
+          <button id="btnSearchOnly" title="Search the web without asking the model">Search</button>
+          <button id="send">Send</button>
+        </div>
+      </div>
+      <div class="help">
+        Note: Grok cannot be used without xAI’s API. This app runs an open model in your browser via WebGPU and optionally pulls web context. If you later want Grok, I can show you how to swap the backend.
+      </div>
+    </main>
   </div>
 
-<script>
-  const chat = document.getElementById('chat');
-  const userInput = document.getElementById('userInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const searchBtn = document.getElementById('searchBtn');
+  <script type="module">
+    // Albert Newton AI – Single-file SPA
+    // Uses WebLLM (client-side) + lightweight web search
+    import * as webllm from "@mlc-ai/web-llm";
 
-  // Simple AI response simulation
-  function albertResponse(input) {
-    input = input.toLowerCase().trim();
+    // DOM nodes
+    const el = (id) => document.getElementById(id);
+    const chatEl = el("chat");
+    const searchEl = el("search");
+    const inputEl = el("input");
+    const sendBtn = el("send");
+    const searchOnlyBtn = el("btnSearchOnly");
+    const modelSel = el("model");
+    const clearBtn = el("clear");
+    const progressBar = el("progressBar");
+    const statusLine = el("status");
+    const progressWrap = document.querySelector(".progress");
+    const autoSearchEl = el("autoSearch");
+    const gpuStateEl = el("gpu-state");
 
-    // Basic knowledge simulation
-    if (input.includes('who are you')) {
-      return "I am Albert Newton AI, your friendly assistant inspired by the great minds of science.";
+    // App state
+    let engine = null;
+    let currentModelId = modelSel.value;
+    let loading = false;
+
+    // Conversation memory (lightweight)
+    const MAX_HISTORY_TOKENS = 2048; // approximate via characters
+    const memoryKey = "albert-newton-history-v1";
+    let history = loadHistory();
+
+    // Persona/system prompt
+    const SYSTEM_PROMPT = `You are "Albert Newton AI" (Albert) — a precise, pragmatic, and curious assistant.
+- Keep answers clear and concise. Use bullet points when listing.
+- If web_context is provided, prioritize it. Cite sources as [n] that map to links shown to the user.
+- If unsure, say so briefly.
+- Be friendly, but avoid fluff.`;
+
+    // Utility: append message to chat UI
+    function addMessage(role, content, opts = {}) {
+      const wrap = document.createElement("div");
+      wrap.className = `msg ${role}`;
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.textContent = role === "user" ? "You" : "AN";
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      const p = document.createElement("p");
+      p.innerText = content;
+      bubble.appendChild(p);
+      if (opts.citations && opts.citations.length) {
+        const cite = document.createElement("div");
+        cite.className = "citations";
+        cite.innerHTML = "Sources: " + opts.citations.map((c, i) => `<a class="link" target="_blank" href="${c}">[${i+1}]</a>`).join(" ");
+        bubble.appendChild(cite);
+      }
+      wrap.appendChild(avatar);
+      wrap.appendChild(bubble);
+      chatEl.appendChild(wrap);
+      chatEl.scrollTop = chatEl.scrollHeight;
+      return bubble;
     }
-    if (input.includes('newton')) {
-      return "Isaac Newton was a physicist and mathematician who formulated the laws of motion and universal gravitation.";
-    }
-    if (input.includes('albert')) {
-      return "Albert Einstein revolutionized physics with his theory of relativity.";
-    }
-    if (input.includes('hello') || input.includes('hi')) {
-      return "Hello! How can I assist you today?";
-    }
-    if (input.includes('help')) {
-      return "You can ask me questions or use the search button to look things up on the web.";
-    }
-    if (input.length === 0) {
-      return "Please type something so I can assist you.";
+
+    function updateStatus(msg) {
+      statusLine.textContent = msg;
     }
 
-    // Default fallback
-    return "That's interesting! Unfortunately, I don't have an answer for that yet. Try searching the web!";
-  }
-
-  // Add message to chat
-  function addMessage(text, sender) {
-    const msg = document.createElement('div');
-    msg.classList.add('message', sender);
-    msg.textContent = text;
-    chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
-  }
-
-  // Handle user input
-  function handleInput() {
-    const input = userInput.value.trim();
-    if (!input) return;
-
-    addMessage(input, 'user');
-    userInput.value = '';
-
-    // Simulate AI thinking delay
-    setTimeout(() => {
-      const response = albertResponse(input);
-      addMessage(response, 'albert');
-    }, 600);
-  }
-
-  // Search the web using DuckDuckGo
-  function searchWeb() {
-    const query = userInput.value.trim();
-    if (!query) return;
-    const url = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
-    window.open(url, '_blank');
-  }
-
-  sendBtn.addEventListener('click', handleInput);
-  userInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      handleInput();
+    function saveHistory() {
+      try {
+        localStorage.setItem(memoryKey, JSON.stringify(history));
+      } catch {}
     }
-  });
-  searchBtn.addEventListener('click', searchWeb);
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(memoryKey);
+        if (!raw) return [];
+        return JSON.parse(raw);
+      } catch {
+        return [];
+      }
+    }
 
-  // Initial greeting
-  addMessage("Hello! I'm Albert Newton AI. Ask me anything or use the search button 🔍.", 'albert');
-</script>
+    function resetChatUI() {
+      chatEl.innerHTML = "";
+      addMessage("ai", "Hello! I’m Albert Newton AI. Ask me anything, or toggle Auto-search for web-backed answers.");
+    }
+
+    // Token-ish count by characters
+    function approxTokens(str) {
+      return Math.ceil((str || "").length / 4);
+    }
+
+    // Build messages for the model
+    function buildMessages(userText, webContextText = "") {
+      const msgs = [{ role: "system", content: SYSTEM_PROMPT }];
+      if (webContextText) {
+        msgs.push({ role: "system", content: "web_context:\n" + webContextText });
+      }
+      // add trimmed history
+      let total = 0;
+      const trimmed = [];
+      for (let i = history.length - 1; i >= 0; i--) {
+        const m = history[i];
+        total += approxTokens(m.content);
+        if (total > MAX_HISTORY_TOKENS) break;
+        trimmed.unshift(m);
+      }
+      msgs.push(...trimmed);
+      msgs.push({ role: "user", content: userText });
+      return msgs;
+    }
+
+    // Web search helpers
+    async function wikiSearch(q, limit = 4) {
+      const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&srlimit=${limit}&origin=*&srsearch=${encodeURIComponent(q)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const pages = data?.query?.search || [];
+      const out = [];
+      for (const p of pages) {
+        const title = p.title;
+        const url2 = "https://en.wikipedia.org/wiki/" + encodeURIComponent(title.replace(/ /g, "_"));
+        let snippet = p.snippet?.replace(/<[^>]+>/g, "") || "";
+        // fetch summary
+        try {
+          const s = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+          if (s.ok) {
+            const j = await s.json();
+            snippet = j.extract || snippet;
+          }
+        } catch {}
+        out.push({ title, url: url2, snippet, source: "Wikipedia" });
+      }
+      return out;
+    }
+
+    async function ddgIA(q, limit = 4) {
+      const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`;
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const items = [];
+        if (data.AbstractURL && data.AbstractText) {
+          items.push({ title: data.Heading || data.AbstractSource || "DuckDuckGo", url: data.AbstractURL, snippet: data.AbstractText, source: "DuckDuckGo" });
+        }
+        const related = (data.RelatedTopics || []).flatMap(rt => rt.Topics ? rt.Topics : [rt]);
+        for (const r of related) {
+          if (r && r.Text && r.FirstURL) {
+            items.push({ title: r.Text.split(" - ")[0].slice(0, 80), url: r.FirstURL, snippet: r.Text, source: "DuckDuckGo" });
+          }
+          if (items.length >= limit) break;
+        }
+        return items.slice(0, limit);
+      } catch {
+        return [];
+      }
+    }
+
+    // Fetch readable text of a URL via r.jina.ai (CORS-friendly text proxy)
+    async function fetchReadable(url) {
+      const prox = "https://r.jina.ai/http://" + url.replace(/^https?:\/\//, "");
+      const controller = new AbortController();
+      const to = setTimeout(() => controller.abort(), 12000);
+      try {
+        const res = await fetch(prox, { signal: controller.signal });
+        clearTimeout(to);
+        if (!res.ok) throw new Error("Fetch failed");
+        const text = await res.text();
+        return text.slice(0, 150_000); // cap
+      } catch (e) {
+        return "";
+      }
+    }
+
+    function dedupeByUrl(list) {
+      const seen = new Set();
+      const out = [];
+      for (const item of list) {
+        const key = (item.url || "").replace(/\/$/, "");
+        if (!seen.has(key)) {
+          seen.add(key);
+          out.push(item);
+        }
+      }
+      return out;
+    }
+
+    function renderSearch(results) {
+      searchEl.innerHTML = "";
+      if (!results.length) {
+        const div = document.createElement("div");
+        div.className = "hint";
+        div.textContent = "No results yet. Use Search or enable Auto-search.";
+        searchEl.appendChild(div);
+        return;
+      }
+      results.forEach((r, idx) => {
+        const d = document.createElement("div");
+        d.className = "result";
+        d.innerHTML = `
+          <h3>${idx+1}. <a target="_blank" href="${r.url}">${escapeHTML(r.title || r.url)}</a></h3>
+          <div class="src">${escapeHTML(r.source || "")} — <span class="muted small">${escapeHTML(r.url)}</span></div>
+          <div class="small" style="margin-top:6px">${escapeHTML(r.snippet || "")}</div>
+        `;
+        searchEl.appendChild(d);
+      });
+    }
+
+    function resultsToContext(results) {
+      // Provide compact context for the LLM
+      const lines = [];
+      results.slice(0, 6).forEach((r, i) => {
+        const snip = (r.snippet || "").replace(/\s+/g, " ").trim();
+        lines.push(`[${i+1}] ${r.title || r.url} — ${snip}`);
+      });
+      return lines.join("\n");
+    }
+
+    function escapeHTML(str="") {
+      return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    async function doSearch(query) {
+      updateStatus("Searching the web…");
+      const [w, d] = await Promise.allSettled([wikiSearch(query, 4), ddgIA(query, 4)]);
+      const results = dedupeByUrl([
+        ...(w.value || []),
+        ...(d.value || []),
+      ]);
+      renderSearch(results);
+      updateStatus("Search ready.");
+      return results;
+    }
+
+    // Initialize WebLLM
+    async function loadModel(modelId) {
+      loading = true;
+      progressWrap.hidden = false;
+      updateStatus(`Loading model ${modelId}…`);
+      if (!engine) {
+        engine = await webllm.CreateMLCEngine(modelId, {
+          initProgressCallback: (report) => {
+            // report: { progress: 0-1, text: "..."}
+            const p = Math.max(0, Math.min(1, report.progress ?? 0));
+            progressBar.style.width = (p*100).toFixed(0) + "%";
+            if (report.text) updateStatus(report.text);
+          }
+        });
+      } else {
+        await engine.reload(modelId, (report) => {
+          const p = Math.max(0, Math.min(1, report.progress ?? 0));
+          progressBar.style.width = (p*100).toFixed(0) + "%";
+          if (report.text) updateStatus(report.text);
+        });
+      }
+      updateStatus(`Model ${modelId} ready.`);
+      progressWrap.hidden = true;
+      loading = false;
+    }
+
+    async function streamReply(messages, onToken) {
+      const params = {
+        messages,
+        temperature: 0.7,
+        max_tokens: 800,
+        stream: true
+      };
+      const result = await engine.chat.completions.create(params);
+      let text = "";
+      for await (const chunk of result) {
+        const delta = chunk.choices?.[0]?.delta?.content || "";
+        if (delta) {
+          text += delta;
+          onToken(delta);
+        }
+      }
+      return text;
+    }
+
+    // Send handler
+    async function handleSend() {
+      const userText = inputEl.value.trim();
+      if (!userText) return;
+      inputEl.value = "";
+      addMessage("user", userText);
+
+      // Optionally search
+      let searchResults = [];
+      if (autoSearchEl.checked) {
+        try { searchResults = await doSearch(userText); } catch {}
+      }
+
+      const citations = searchResults.slice(0,6).map(r => r.url);
+      const contextText = resultsToContext(searchResults);
+
+      // Build messages for the model
+      const messages = buildMessages(userText, contextText);
+
+      // Add pending AI bubble
+      const bubble = addMessage("ai", "…", { citations });
+
+      if (!engine) {
+        bubble.querySelector("p").textContent = "Model not loaded yet. Please wait for the model to finish loading.";
+        return;
+      }
+
+      try {
+        updateStatus("Thinking…");
+        let acc = "";
+        bubble.querySelector("p").textContent = "";
+        await streamReply(messages, (delta) => {
+          acc += delta;
+          bubble.querySelector("p").textContent = acc;
+          chatEl.scrollTop = chatEl.scrollHeight;
+        });
+        updateStatus("Ready.");
+        // update history
+        history.push({ role: "user", content: userText });
+        history.push({ role: "assistant", content: bubble.querySelector("p").textContent });
+        // keep small
+        if (history.length > 40) history = history.slice(-40);
+        saveHistory();
+      } catch (e) {
+        bubble.querySelector("p").textContent = "Sorry, I ran into an issue generating a reply.";
+        updateStatus("Error during generation.");
+      }
+    }
+
+    // Search-only handler
+    async function handleSearchOnly() {
+      const q = inputEl.value.trim();
+      if (!q) return;
+      await doSearch(q);
+    }
+
+    // UI wiring
+    sendBtn.addEventListener("click", handleSend);
+    searchOnlyBtn.addEventListener("click", handleSearchOnly);
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+    modelSel.addEventListener("change", async (e) => {
+      currentModelId = modelSel.value;
+      await loadModel(currentModelId);
+    });
+    clearBtn.addEventListener("click", () => {
+      history = [];
+      saveHistory();
+      resetChatUI();
+      searchEl.innerHTML = "";
+    });
+
+    // GPU capability check
+    function checkGPU() {
+      if (navigator.gpu) {
+        gpuStateEl.textContent = "WebGPU: OK";
+      } else {
+        gpuStateEl.textContent = "WebGPU not available (model may not run)";
+      }
+    }
+
+    // Boot
+    (async function init() {
+      checkGPU();
+      resetChatUI();
+
+      // Restore last model choice
+      const savedModel = localStorage.getItem("albert-model");
+      if (savedModel) {
+        currentModelId = savedModel;
+        for (let i=0;i<modelSel.options.length;i++){
+          if (modelSel.options[i].value === savedModel) modelSel.selectedIndex = i;
+        }
+      }
+      modelSel.addEventListener("change", () => {
+        localStorage.setItem("albert-model", modelSel.value);
+      });
+
+      try {
+        await loadModel(currentModelId);
+      } catch (e) {
+        updateStatus("Could not load model. You can still use web search.");
+        progressWrap.hidden = true;
+      }
+
+      // If there’s prior history, render a short recap
+      if (history.length) {
+        history.forEach(m => addMessage(m.role === "assistant" ? "ai" : "user", m.content));
+      }
+    })();
+
+    // OPTIONAL: If you ever want to wire Grok (xAI API), you’d replace streamReply()
+    // with a fetch() call to xAI’s chat completion endpoint from your own small proxy
+    // server. Direct browser calls often fail due to CORS. For now, we stay 100% local.
+  </script>
 </body>
 </html>
